@@ -9,39 +9,21 @@ import Rank from "./components/Rank/Rank";
 import FaceRecognition from "./components/FaceRecognition/FaceRecognition";
 import './App.css';
 
-// Setup Clarifai AI API Request
-const returnClarifaiJSONRequest = (imageUrl)=> {
-  const PAT = 'd21bdbf49c9e43df884a8d1202f2aad3';
-  const USER_ID = 'coeedex';       
-  const APP_ID = 'smart-face-detector';
-  const IMAGE_URL = imageUrl;
-
-  const raw = JSON.stringify({
-    "user_app_id": {
-        "user_id": USER_ID,
-        "app_id": APP_ID
-    },
-    "inputs": [
-        {
-            "data": {
-                "image": {
-                    "url": IMAGE_URL
-                }
-            }
-        }
-    ]
-  });
-
-  const requestOptions = {
-    method: 'POST',
-    headers: {
-        'Accept': 'application/json',
-        'Authorization': 'Key ' + PAT
-    },
-    body: raw
-  };
-
-  return requestOptions;
+const initialState= {
+  input: '',
+  imageUrl: '',
+  faceCount: '',
+  box: {},
+  route: 'signin',
+  isSignedIn: false,
+  user: {
+    id: '',
+    name: '',
+    email: '',
+    entries: 0,
+    joined: ''
+    
+  }
 }
 
 class App extends Component {
@@ -53,8 +35,26 @@ class App extends Component {
       faceCount: '',
       box: {},
       route: 'signin',
-      isSignedIn: false
+      isSignedIn: false,
+      user: {
+        id: '',
+        name: '',
+        email: '',
+        entries: 0,
+        joined: ''
+        
+      }
     }
+  }
+
+  loadUser = (data) => {
+    this.setState({user:{
+      id: data.id,
+      name: data.name,
+      email: data.email,
+      entries: data.entries,
+      joined: data.joined
+    }});
   }
 
   calculateFaceLocation = (data) => {
@@ -83,15 +83,16 @@ class App extends Component {
 
   onButtonSubmit = () => {
     this.setState({imageUrl: this.state.input}); //Set stata for the image-link sent to the API
-
-    fetch('https://api.clarifai.com/v2/models/face-detection/outputs',
-    returnClarifaiJSONRequest(this.state.input))
+    fetch('http://localhost:3000/imageurl', {
+      method: 'post',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        input: this.state.input
+      })
+    })
     .then(response => response.json())
     .then(response => {
-      this.setState({faceCount: response.outputs[0].data.regions.length}); //Sets the No of Detected Faces 
-      this.displayFaceBox(this.calculateFaceLocation(response)); //Calls the FaceLocation Calculator
-
-      /* if (response) {
+      if (response) {
         fetch('http://localhost:3000/image', {
           method: 'put',
           headers: {'Content-Type': 'application/json'},
@@ -99,19 +100,20 @@ class App extends Component {
             id: this.state.user.id
           })
         })
-
         .then(response => response.json())
         .then(count => {
-          this.setState(Object.assign(this.state.user, {entries:count}))
+          this.setState(Object.assign(this.state.user, { entries: count }));
         })
-      } */
+      }
+      this.setState({faceCount: response.outputs[0].data.regions.length}); //Sets the No of Detected Faces 
+      this.displayFaceBox(this.calculateFaceLocation(response)); //Calls the FaceLocation Calculator
     })
     .catch(err => console.log(err));
   }
 
   onRouteChange = (route) => {
     if (route === 'signout') {
-      this.setState({isSignedIn: false});
+      this.setState(initialState);
     } else if (route === 'home') {
       this.setState({isSignedIn: true});
     }
@@ -127,7 +129,10 @@ class App extends Component {
         {this.state.route === 'home'
           ? <div>
               <Logo />
-              <Rank />
+              <Rank
+              name={this.state.user.name} 
+              entries={this.state.user.entries} 
+              />
               <ImageLinkForm 
                 onInputChange={this.onInputChange}
                 onButtonSubmit={this.onButtonSubmit}
@@ -140,8 +145,12 @@ class App extends Component {
             </div>
           : (
             route === 'signin'
-            ? <SignIn onRouteChange={this.onRouteChange}/>
-            : <Register onRouteChange={this.onRouteChange}/>
+            ? <SignIn
+                loadUser={this.loadUser} 
+                onRouteChange={this.onRouteChange}/>
+            : <Register
+                loadUser={this.loadUser} 
+                onRouteChange={this.onRouteChange}/>
           )             
         }        
       </div>
@@ -150,4 +159,3 @@ class App extends Component {
 }
 
 export default App;
-
