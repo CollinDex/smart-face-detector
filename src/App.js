@@ -83,7 +83,7 @@ class App extends Component {
 
   onButtonSubmit = () => {
     this.setState({imageUrl: this.state.input}); //Set stata for the image-link sent to the API
-    fetch('http://localhost:3000/imageurl', {
+    fetch('https://smart-face-detect-api-b5t8.onrender.com', {
       method: 'post',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({
@@ -93,7 +93,7 @@ class App extends Component {
     .then(response => response.json())
     .then(response => {
       if (response) {
-        fetch('http://localhost:3000/image', {
+        fetch('https://smart-face-detect-api-b5t8.onrender.com', {
           method: 'put',
           headers: {'Content-Type': 'application/json'},
           body: JSON.stringify({
