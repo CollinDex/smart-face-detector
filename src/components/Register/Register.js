@@ -25,7 +25,7 @@ class Register  extends React.Component {
     onSubmitRegister = () => {
         console.log(this.state);
         if (this.state.email.length > 1 && this.state.name.length > 1) {
-            fetch('https://smart-face-detect-api-b5t8.onrender.com', {
+            fetch('https://smart-face-detect-api-b5t8.onrender.com/register', {
             method: 'post',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({
